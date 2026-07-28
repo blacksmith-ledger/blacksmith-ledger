@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Blacksmith's Ledger v0.1</title>
+<style>
+body{font-family:Arial,sans-serif;max-width:700px;margin:auto;padding:20px}
+button{font-size:20px;padding:12px;margin-top:10px}
+#out{margin-top:20px;padding:12px;border:1px solid #999}
+</style></head>
+<body>
+<h1>Blacksmith's Ledger Prototype</h1>
+<p>Cash: <span id="cash">48</span>d</p>
+<label><input id="contract" type="checkbox"> Accept Nail Contract</label><br>
+<button onclick="resolveGame()">Resolve Season</button>
+<div id="out">Waiting...</div>
+<script>
+function resolveGame(){
+ let cash=48;
+ let rep=0;
+ let msg="No contract accepted.";
+ if(document.getElementById('contract').checked){
+   let bonus=[0,2,-1][Math.floor(Math.random()*3)];
+   cash += 8+bonus;
+   rep=1;
+   msg="Contract completed! Fate bonus: "+bonus+"d";
+ }
+ document.getElementById('cash').textContent=cash;
+ document.getElementById('out').innerHTML="<b>"+msg+"</b><br>Cash: "+cash+"d<br>Reputation: "+rep;
+}
+</script>
+</body></html>
