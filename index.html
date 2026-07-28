@@ -1,31 +1,247 @@
 <!DOCTYPE html>
-<html><head><meta charset="utf-8">
+<html lang="en">
+<head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Blacksmith's Ledger v0.1</title>
+<title>The Blacksmith's Ledger v0.2</title>
 <style>
-body{font-family:Arial,sans-serif;max-width:700px;margin:auto;padding:20px}
-button{font-size:20px;padding:12px;margin-top:10px}
-#out{margin-top:20px;padding:12px;border:1px solid #999}
-</style></head>
-<body>
-<h1>Blacksmith's Ledger Prototype</h1>
-<p>Cash: <span id="cash">48</span>d</p>
-<label><input id="contract" type="checkbox"> Accept Nail Contract</label><br>
-<button onclick="resolveGame()">Resolve Season</button>
-<div id="out">Waiting...</div>
-<script>
-function resolveGame(){
- let cash=48;
- let rep=0;
- let msg="No contract accepted.";
- if(document.getElementById('contract').checked){
-   let bonus=[0,2,-1][Math.floor(Math.random()*3)];
-   cash += 8+bonus;
-   rep=1;
-   msg="Contract completed! Fate bonus: "+bonus+"d";
- }
- document.getElementById('cash').textContent=cash;
- document.getElementById('out').innerHTML="<b>"+msg+"</b><br>Cash: "+cash+"d<br>Reputation: "+rep;
+:root{
+  --paper:#f3e4bd;--paper2:#e4c991;--ink:#2d2418;--wood:#4c2f1c;
+  --accent:#8b3e24;--good:#315c38;--bad:#8b2f27;
 }
+*{box-sizing:border-box}
+body{
+  margin:0;font-family:Georgia,serif;color:var(--ink);
+  background:linear-gradient(rgba(39,25,16,.45),rgba(39,25,16,.45)),
+  repeating-linear-gradient(90deg,#55361f 0 30px,#624126 30px 60px);
+}
+.wrap{max-width:900px;margin:auto;padding:12px}
+.book{background:var(--paper);border:5px solid var(--wood);border-radius:12px;overflow:hidden}
+header{background:var(--wood);color:#fff4d7;text-align:center;padding:18px}
+h1{margin:0;font-size:clamp(1.8rem,7vw,2.8rem)}
+small{opacity:.8}
+main{padding:12px;display:grid;gap:12px}
+.panel{background:rgba(255,255,255,.28);border:2px solid #9c8055;border-radius:8px;padding:12px}
+h2{margin:0 0 10px;border-bottom:1px solid #9c8055;padding-bottom:5px;color:var(--wood)}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.stat{background:rgba(255,255,255,.42);border:1px solid #a88f65;border-radius:6px;padding:9px}
+.stat b{display:block;font-size:.8rem;text-transform:uppercase;color:#5c482f}
+.stat span{font-size:1.25rem;font-weight:bold}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label{font-weight:bold;display:block;margin-bottom:5px}
+input[type=number],select{
+ width:100%;min-height:44px;font-size:1rem;padding:8px;border:2px solid #8e7650;border-radius:6px;background:#fffaf0
+}
+.card{background:#fff4d7;border:2px dashed #8e7650;border-radius:7px;padding:10px;margin-bottom:8px}
+.card label{display:flex;gap:8px;align-items:flex-start}
+.card input{width:22px;height:22px}
+.product-row{display:grid;grid-template-columns:1.5fr .7fr .7fr .7fr;gap:6px;align-items:center;border-bottom:1px dotted #9c8055;padding:7px 0}
+.product-row input{min-height:38px}
+.summary-row{display:flex;justify-content:space-between;border-bottom:1px dotted #9c8055;padding:5px 0}
+.msg{padding:10px;border-radius:6px;margin-top:8px;font-weight:bold}
+.good{background:#dcebdc;color:var(--good);border:1px solid var(--good)}
+.bad{background:#efd7d3;color:var(--bad);border:1px solid var(--bad)}
+button{width:100%;min-height:52px;font-size:1.1rem;font-weight:bold;border:0;border-radius:7px;margin-top:8px}
+#resolve{background:var(--accent);color:white}
+#newGame{background:var(--paper2);border:2px solid #8e7650;color:var(--ink)}
+button:disabled{opacity:.45}
+#report{display:none}
+#report.show{display:block}
+.logline{display:flex;justify-content:space-between;border-bottom:1px dotted #9c8055;padding:5px 0}
+@media(min-width:720px){
+  main{grid-template-columns:1fr 1fr}
+  .full{grid-column:1/-1}
+}
+</style>
+</head>
+<body>
+<div class="wrap"><div class="book">
+<header>
+<h1>The Blacksmith's Ledger</h1>
+<small>Prototype v0.2 — four seasons</small>
+</header>
+<main>
+<section class="panel full">
+<h2 id="seasonTitle">Spring — Year 1</h2>
+<div class="stats">
+<div class="stat"><b>Cash</b><span id="cash">50d</span></div>
+<div class="stat"><b>Iron</b><span id="iron">4</span></div>
+<div class="stat"><b>Charcoal</b><span id="coal">4</span></div>
+<div class="stat"><b>Labor</b><span id="labor">5</span></div>
+<div class="stat"><b>Reputation</b><span id="rep">0</span></div>
+<div class="stat"><b>Status</b><span id="status">Planning</span></div>
+</div>
+</section>
+
+<section class="panel">
+<h2>Market</h2>
+<div class="grid2">
+<div><label>Buy iron (<span id="ironPrice">3</span>d each)</label><input id="buyIron" type="number" min="0" value="0"></div>
+<div><label>Buy charcoal (<span id="coalPrice">2</span>d each)</label><input id="buyCoal" type="number" min="0" value="0"></div>
+</div>
+</section>
+
+<section class="panel">
+<h2>Contracts</h2>
+<div id="contracts"></div>
+</section>
+
+<section class="panel full">
+<h2>Workshop Plan</h2>
+<div class="product-row"><b>Product</b><b>Iron</b><b>Coal</b><b>Qty</b></div>
+<div class="product-row"><span>Nails</span><span>1</span><span>1</span><input id="nails" type="number" min="0" value="0"></div>
+<div class="product-row"><span>Horseshoes</span><span>2</span><span>1</span><input id="shoes" type="number" min="0" value="0"></div>
+<div class="product-row"><span>Knives</span><span>2</span><span>2</span><input id="knives" type="number" min="0" value="0"></div>
+<div class="product-row"><span>Axe heads</span><span>3</span><span>2</span><input id="axes" type="number" min="0" value="0"></div>
+<p>Each item also uses 1 labor.</p>
+</section>
+
+<section class="panel full">
+<h2>Planned Ledger</h2>
+<div class="summary-row"><span>Purchases</span><b id="purchaseCost">0d</b></div>
+<div class="summary-row"><span>Iron required</span><b id="ironNeed">0</b></div>
+<div class="summary-row"><span>Charcoal required</span><b id="coalNeed">0</b></div>
+<div class="summary-row"><span>Labor required</span><b id="laborNeed">0</b></div>
+<div class="summary-row"><span>Expected contract income</span><b id="income">0d</b></div>
+<div class="summary-row"><span>Expected ending cash</span><b id="endingCash">50d</b></div>
+<div id="message" class="msg good">Plan is valid.</div>
+</section>
+
+<section id="report" class="panel full">
+<h2>Season Report</h2>
+<div id="fate" class="card"></div>
+<div id="log"></div>
+</section>
+
+<section class="panel full">
+<button id="resolve">Resolve Season</button>
+<button id="newGame">Start New Game</button>
+</section>
+</main>
+</div></div>
+
+<script>
+(()=>{
+const seasons=["Spring","Summer","Autumn","Winter"];
+const products={
+ nails:{name:"Nails",iron:1,coal:1,labor:1},
+ shoes:{name:"Horseshoes",iron:2,coal:1,labor:1},
+ knives:{name:"Knives",iron:2,coal:2,labor:1},
+ axes:{name:"Axe heads",iron:3,coal:2,labor:1}
+};
+const contractDeck=[
+ {title:"Village Carpenter",product:"nails",qty:2,pay:12,rep:1},
+ {title:"Stable Master",product:"shoes",qty:2,pay:18,rep:1},
+ {title:"Traveling Merchant",product:"knives",qty:2,pay:24,rep:2},
+ {title:"Woodcutter's Guild",product:"axes",qty:1,pay:20,rep:1},
+ {title:"Town Repairs",product:"nails",qty:3,pay:17,rep:1},
+ {title:"Cavalry Order",product:"shoes",qty:3,pay:29,rep:2}
+];
+const fateDeck=[
+ {name:"Quiet Trade",text:"No change this season.",bonus:0},
+ {name:"Urgent Demand",text:"Completed contracts pay 2d extra.",bonus:2},
+ {name:"Slow Roads",text:"Completed contracts pay 1d less.",bonus:-1},
+ {name:"Good Ore",text:"Gain 1 iron after production.",iron:1,bonus:0}
+];
+let game;
+const $=id=>document.getElementById(id);
+
+function reset(){
+ game={season:0,year:1,cash:50,iron:4,coal:4,labor:5,rep:0,ironPrice:3,coalPrice:2,over:false,contracts:[]};
+ drawContracts(); update();
+ $("report").classList.remove("show"); $("log").innerHTML="";
+ ["buyIron","buyCoal","nails","shoes","knives","axes"].forEach(id=>$(id).value=0);
+}
+
+function drawContracts(){
+ const picks=[...contractDeck].sort(()=>Math.random()-.5).slice(0,3);
+ game.contracts=picks;
+ $("contracts").innerHTML=picks.map((c,i)=>`
+ <div class="card">
+ <label><input type="checkbox" class="contract" data-i="${i}">
+ <span><b>${c.title}</b><br>${c.qty} ${products[c.product].name}<br>Pay: ${c.pay}d · Reputation: +${c.rep}</span></label>
+ </div>`).join("");
+ document.querySelectorAll(".contract").forEach(x=>x.addEventListener("change",update));
+}
+
+function n(id){return Math.max(0,parseInt($(id).value)||0)}
+function plan(){
+ const qty={nails:n("nails"),shoes:n("shoes"),knives:n("knives"),axes:n("axes")};
+ const buyIron=n("buyIron"),buyCoal=n("buyCoal");
+ let ironNeed=0,coalNeed=0,laborNeed=0;
+ Object.keys(qty).forEach(k=>{
+   ironNeed+=qty[k]*products[k].iron;
+   coalNeed+=qty[k]*products[k].coal;
+   laborNeed+=qty[k]*products[k].labor;
+ });
+ const selected=[...document.querySelectorAll(".contract:checked")].map(x=>game.contracts[+x.dataset.i]);
+ let income=selected.reduce((s,c)=>s+c.pay,0);
+ const cost=buyIron*game.ironPrice+buyCoal*game.coalPrice;
+ const errors=[];
+ if(cost>game.cash) errors.push("Not enough cash for purchases.");
+ if(ironNeed>game.iron+buyIron) errors.push("Not enough iron.");
+ if(coalNeed>game.coal+buyCoal) errors.push("Not enough charcoal.");
+ if(laborNeed>game.labor) errors.push("Not enough labor.");
+ selected.forEach(c=>{ if(qty[c.product]<c.qty) errors.push(`${c.title} requires ${c.qty} ${products[c.product].name}.`); });
+ return {qty,buyIron,buyCoal,ironNeed,coalNeed,laborNeed,selected,income,cost,errors};
+}
+
+function update(){
+ $("seasonTitle").textContent=`${seasons[game.season]} — Year ${game.year}`;
+ $("cash").textContent=game.cash+"d"; $("iron").textContent=game.iron; $("coal").textContent=game.coal;
+ $("labor").textContent=game.labor; $("rep").textContent=game.rep;
+ $("ironPrice").textContent=game.ironPrice; $("coalPrice").textContent=game.coalPrice;
+ $("status").textContent=game.over?"Game Over":"Planning";
+ const p=plan();
+ $("purchaseCost").textContent="-"+p.cost+"d"; $("ironNeed").textContent=p.ironNeed;
+ $("coalNeed").textContent=p.coalNeed; $("laborNeed").textContent=p.laborNeed;
+ $("income").textContent="+"+p.income+"d"; $("endingCash").textContent=(game.cash-p.cost+p.income)+"d";
+ $("message").className="msg "+(p.errors.length?"bad":"good");
+ $("message").textContent=p.errors.length?p.errors.join(" "):"Plan is valid.";
+ $("resolve").disabled=game.over||p.errors.length>0;
+}
+
+function log(label,value){
+ const d=document.createElement("div");d.className="logline";
+ d.innerHTML=`<span>${label}</span><b>${value}</b>`;$("log").appendChild(d);
+}
+
+function resolve(){
+ const p=plan(); if(p.errors.length||game.over)return;
+ $("log").innerHTML="";
+ const fate=fateDeck[Math.floor(Math.random()*fateDeck.length)];
+ $("fate").innerHTML=`<b>Fate: ${fate.name}</b><br>${fate.text}`;
+ log("Starting cash",game.cash+"d");
+ game.cash-=p.cost;game.iron+=p.buyIron;game.coal+=p.buyCoal;
+ if(p.cost)log("Market purchases","-"+p.cost+"d");
+ game.iron-=p.ironNeed;game.coal-=p.coalNeed;game.labor-=p.laborNeed;
+ if(p.laborNeed)log("Production completed",p.laborNeed+" items");
+ p.selected.forEach(c=>{
+   const pay=Math.max(0,c.pay+(fate.bonus||0));game.cash+=pay;game.rep+=c.rep;
+   log(c.title,"+"+pay+"d");
+ });
+ if(fate.iron){game.iron+=fate.iron;log("Good ore","+1 iron")}
+ game.season++;
+ if(game.season>=4){game.over=true;game.season=3; $("status").textContent="Game Over";}
+ else{
+   game.labor=5;
+   game.ironPrice=Math.max(2,Math.min(5,game.ironPrice+[-1,0,1][Math.floor(Math.random()*3)]));
+   game.coalPrice=Math.max(1,Math.min(4,game.coalPrice+[-1,0,1][Math.floor(Math.random()*3)]));
+   drawContracts();
+ }
+ ["buyIron","buyCoal","nails","shoes","knives","axes"].forEach(id=>$(id).value=0);
+ document.querySelectorAll(".contract").forEach(x=>x.checked=false);
+ $("report").classList.add("show");
+ log("Ending cash",game.cash+"d");log("Reputation",game.rep);
+ update();
+ $("report").scrollIntoView({behavior:"smooth"});
+}
+
+["buyIron","buyCoal","nails","shoes","knives","axes"].forEach(id=>$(id).addEventListener("input",update));
+$("resolve").addEventListener("click",resolve);
+$("newGame").addEventListener("click",reset);
+reset();
+})();
 </script>
-</body></html>
+</body>
+</html>
