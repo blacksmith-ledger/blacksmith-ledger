@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>The Blacksmith's Ledger v0.2</title>
+<title>The Blacksmith's Ledger v0.4.1</title>
 <style>
 :root{
   --paper:#f3e4bd;--paper2:#e4c991;--ink:#2d2418;--wood:#4c2f1c;
@@ -47,6 +47,17 @@ button{width:100%;min-height:52px;font-size:1.1rem;font-weight:bold;border:0;bor
 button:disabled{opacity:.45}
 #report{display:none}
 #report.show{display:block}
+.save-note{text-align:center;font-size:.9rem;margin-top:8px;opacity:.8}
+.upgrade-grid{display:grid;grid-template-columns:1fr;gap:8px;margin-top:10px}
+.upgrade-card{border:1px solid rgba(70,40,20,.35);padding:10px;border-radius:8px;background:rgba(255,255,255,.22)}
+.upgrade-card button{margin-top:6px}
+.small-note{font-size:.88rem;opacity:.82}
+.inventory-row{display:grid;grid-template-columns:1fr auto;gap:10px;padding:4px 0;border-bottom:1px dotted rgba(70,40,20,.3)}
+.stepper{display:grid;grid-template-columns:48px minmax(64px,1fr) 48px;gap:6px;align-items:center;margin-top:5px}
+.stepper button{margin:0;padding:10px 0;font-size:1.35rem;font-weight:bold;line-height:1}
+.stepper input{text-align:center;margin:0;min-width:0}
+.stepper input::-webkit-outer-spin-button,.stepper input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.stepper input[type=number]{-moz-appearance:textfield}
 .logline{display:flex;justify-content:space-between;border-bottom:1px dotted #9c8055;padding:5px 0}
 @media(min-width:720px){
   main{grid-template-columns:1fr 1fr}
@@ -58,7 +69,7 @@ button:disabled{opacity:.45}
 <div class="wrap"><div class="book">
 <header>
 <h1>The Blacksmith's Ledger</h1>
-<small>Prototype v0.2 — four seasons</small>
+<small>Prototype v0.4.1 — touch controls</small>
 </header>
 <main>
 <section class="panel full">
@@ -76,8 +87,8 @@ button:disabled{opacity:.45}
 <section class="panel">
 <h2>Market</h2>
 <div class="grid2">
-<div><label>Buy iron (<span id="ironPrice">3</span>d each)</label><input id="buyIron" type="number" min="0" value="0"></div>
-<div><label>Buy charcoal (<span id="coalPrice">2</span>d each)</label><input id="buyCoal" type="number" min="0" value="0"></div>
+<div><label>Buy iron (<span id="ironPrice">3</span>d each)</label><div class="stepper"><button type="button" class="step-btn" data-target="buyIron" data-step="-1" aria-label="Subtract one">−</button><input id="buyIron" type="number" min="0" value="0" inputmode="numeric"><button type="button" class="step-btn" data-target="buyIron" data-step="1" aria-label="Add one">+</button></div></div>
+<div><label>Buy charcoal (<span id="coalPrice">2</span>d each)</label><div class="stepper"><button type="button" class="step-btn" data-target="buyCoal" data-step="-1" aria-label="Subtract one">−</button><input id="buyCoal" type="number" min="0" value="0" inputmode="numeric"><button type="button" class="step-btn" data-target="buyCoal" data-step="1" aria-label="Add one">+</button></div></div>
 </div>
 </section>
 
@@ -89,10 +100,10 @@ button:disabled{opacity:.45}
 <section class="panel full">
 <h2>Workshop Plan</h2>
 <div class="product-row"><b>Product</b><b>Iron</b><b>Coal</b><b>Qty</b></div>
-<div class="product-row"><span>Nails</span><span>1</span><span>1</span><input id="nails" type="number" min="0" value="0"></div>
-<div class="product-row"><span>Horseshoes</span><span>2</span><span>1</span><input id="shoes" type="number" min="0" value="0"></div>
-<div class="product-row"><span>Knives</span><span>2</span><span>2</span><input id="knives" type="number" min="0" value="0"></div>
-<div class="product-row"><span>Axe heads</span><span>3</span><span>2</span><input id="axes" type="number" min="0" value="0"></div>
+<div class="product-row"><span>Nails</span><span>1</span><span>1</span><div class="stepper"><button type="button" class="step-btn" data-target="nails" data-step="-1" aria-label="Subtract one">−</button><input id="nails" type="number" min="0" value="0" inputmode="numeric"><button type="button" class="step-btn" data-target="nails" data-step="1" aria-label="Add one">+</button></div></div>
+<div class="product-row"><span>Horseshoes</span><span>2</span><span>1</span><div class="stepper"><button type="button" class="step-btn" data-target="shoes" data-step="-1" aria-label="Subtract one">−</button><input id="shoes" type="number" min="0" value="0" inputmode="numeric"><button type="button" class="step-btn" data-target="shoes" data-step="1" aria-label="Add one">+</button></div></div>
+<div class="product-row"><span>Knives</span><span>2</span><span>2</span><div class="stepper"><button type="button" class="step-btn" data-target="knives" data-step="-1" aria-label="Subtract one">−</button><input id="knives" type="number" min="0" value="0" inputmode="numeric"><button type="button" class="step-btn" data-target="knives" data-step="1" aria-label="Add one">+</button></div></div>
+<div class="product-row"><span>Axe heads</span><span>3</span><span>2</span><div class="stepper"><button type="button" class="step-btn" data-target="axes" data-step="-1" aria-label="Subtract one">−</button><input id="axes" type="number" min="0" value="0" inputmode="numeric"><button type="button" class="step-btn" data-target="axes" data-step="1" aria-label="Add one">+</button></div></div>
 <p>Each item also uses 1 labor.</p>
 </section>
 
@@ -114,49 +125,151 @@ button:disabled{opacity:.45}
 </section>
 
 <section class="panel full">
+
+<section class="panel">
+  <h2>Finished Goods Inventory</h2>
+  <div id="inventoryList"></div>
+  <p class="small-note">Goods not used for contracts remain in your shop and may be sold on the open market.</p>
+</section>
+
+<section class="panel">
+  <h2>Open Market Sales</h2>
+  <div class="grid">
+    <label>Nails to sell<div class="stepper"><button type="button" class="step-btn" data-target="sellNails" data-step="-1" aria-label="Subtract one">−</button><input id="sellNails" type="number" min="0" value="0" inputmode="numeric"><button type="button" class="step-btn" data-target="sellNails" data-step="1" aria-label="Add one">+</button></div></label>
+    <label>Horseshoes to sell<div class="stepper"><button type="button" class="step-btn" data-target="sellShoes" data-step="-1" aria-label="Subtract one">−</button><input id="sellShoes" type="number" min="0" value="0" inputmode="numeric"><button type="button" class="step-btn" data-target="sellShoes" data-step="1" aria-label="Add one">+</button></div></label>
+    <label>Knives to sell<div class="stepper"><button type="button" class="step-btn" data-target="sellKnives" data-step="-1" aria-label="Subtract one">−</button><input id="sellKnives" type="number" min="0" value="0" inputmode="numeric"><button type="button" class="step-btn" data-target="sellKnives" data-step="1" aria-label="Add one">+</button></div></label>
+    <label>Axe heads to sell<div class="stepper"><button type="button" class="step-btn" data-target="sellAxes" data-step="-1" aria-label="Subtract one">−</button><input id="sellAxes" type="number" min="0" value="0" inputmode="numeric"><button type="button" class="step-btn" data-target="sellAxes" data-step="1" aria-label="Add one">+</button></div></label>
+  </div>
+  <p>Estimated market income: <b id="marketIncome">+0d</b></p>
+</section>
+
+<section class="panel">
+  <h2>Workshop Upgrades</h2>
+  <div class="upgrade-grid">
+    <div class="upgrade-card">
+      <b>Improved Bellows</b><br>
+      +1 labor at the start of every season.<br>
+      Cost: 35d
+      <button id="buyBellows">Buy Bellows</button>
+    </div>
+    <div class="upgrade-card">
+      <b>Efficient Forge</b><br>
+      The first item produced each season uses 1 less charcoal.<br>
+      Cost: 45d
+      <button id="buyForge">Buy Efficient Forge</button>
+    </div>
+    <div class="upgrade-card">
+      <b>Guild Sign</b><br>
+      All completed contracts pay 2d more.<br>
+      Cost: 40d
+      <button id="buySign">Buy Guild Sign</button>
+    </div>
+  </div>
+</section>
+
 <button id="resolve">Resolve Season</button>
 <button id="newGame">Start New Game</button>
+
+<div id="saveNote" class="save-note">Progress saves automatically on this device.</div>
 </section>
 </main>
 </div></div>
 
 <script>
 (()=>{
+const SAVE_KEY="blacksmithLedger_v04";
 const seasons=["Spring","Summer","Autumn","Winter"];
+
 const products={
- nails:{name:"Nails",iron:1,coal:1,labor:1},
- shoes:{name:"Horseshoes",iron:2,coal:1,labor:1},
- knives:{name:"Knives",iron:2,coal:2,labor:1},
- axes:{name:"Axe heads",iron:3,coal:2,labor:1}
+ nails:{name:"Nails",iron:1,coal:1,labor:1,market:4},
+ shoes:{name:"Horseshoes",iron:2,coal:1,labor:1,market:7},
+ knives:{name:"Knives",iron:2,coal:2,labor:1,market:9},
+ axes:{name:"Axe heads",iron:3,coal:2,labor:1,market:12}
 };
+
 const contractDeck=[
  {title:"Village Carpenter",product:"nails",qty:2,pay:12,rep:1},
  {title:"Stable Master",product:"shoes",qty:2,pay:18,rep:1},
  {title:"Traveling Merchant",product:"knives",qty:2,pay:24,rep:2},
  {title:"Woodcutter's Guild",product:"axes",qty:1,pay:20,rep:1},
  {title:"Town Repairs",product:"nails",qty:3,pay:17,rep:1},
- {title:"Cavalry Order",product:"shoes",qty:3,pay:29,rep:2}
+ {title:"Cavalry Order",product:"shoes",qty:3,pay:29,rep:2},
+ {title:"River Barges",product:"nails",qty:4,pay:23,rep:2},
+ {title:"Hunter's Lodge",product:"knives",qty:1,pay:14,rep:1},
+ {title:"Foresters",product:"axes",qty:2,pay:37,rep:2}
 ];
+
 const fateDeck=[
  {name:"Quiet Trade",text:"No change this season.",bonus:0},
  {name:"Urgent Demand",text:"Completed contracts pay 2d extra.",bonus:2},
  {name:"Slow Roads",text:"Completed contracts pay 1d less.",bonus:-1},
- {name:"Good Ore",text:"Gain 1 iron after production.",iron:1,bonus:0}
+ {name:"Good Ore",text:"Gain 1 iron after production.",iron:1,bonus:0},
+ {name:"Hot Forge",text:"Gain 1 extra labor this season.",labor:1,bonus:0},
+ {name:"Merchant Fair",text:"Completed contracts pay 1d extra.",bonus:1},
+ {name:"Busy Market",text:"Open-market goods sell for 1d more each.",marketBonus:1,bonus:0},
+ {name:"Poor Market",text:"Open-market goods sell for 1d less each.",marketBonus:-1,bonus:0}
 ];
+
 let game;
 const $=id=>document.getElementById(id);
 
+function freshGame(){
+ return {
+   season:0,year:1,cash:50,iron:4,coal:4,labor:5,rep:0,
+   ironPrice:3,coalPrice:2,over:false,contracts:[],
+   goods:{nails:0,shoes:0,knives:0,axes:0},
+   upgrades:{bellows:false,forge:false,sign:false}
+ };
+}
+
+function normalizeGame(){
+ game.goods=game.goods||{nails:0,shoes:0,knives:0,axes:0};
+ game.upgrades=game.upgrades||{bellows:false,forge:false,sign:false};
+ for(const k of Object.keys(products)) if(typeof game.goods[k]!=="number") game.goods[k]=0;
+}
+
+function save(){
+ try{
+   localStorage.setItem(SAVE_KEY,JSON.stringify(game));
+   $("saveNote").textContent="Progress saved automatically.";
+ }catch(e){
+   $("saveNote").textContent="Automatic saving is unavailable in this browser.";
+ }
+}
+
+function load(){
+ try{
+   const raw=localStorage.getItem(SAVE_KEY);
+   if(!raw)return false;
+   game=JSON.parse(raw);
+   if(!game || typeof game.cash!=="number")return false;
+   normalizeGame();
+   return true;
+ }catch(e){return false;}
+}
+
+function resetInputs(){
+ ["buyIron","buyCoal","nails","shoes","knives","axes",
+  "sellNails","sellShoes","sellKnives","sellAxes"].forEach(id=>$(id).value=0);
+}
+
 function reset(){
- game={season:0,year:1,cash:50,iron:4,coal:4,labor:5,rep:0,ironPrice:3,coalPrice:2,over:false,contracts:[]};
- drawContracts(); update();
- $("report").classList.remove("show"); $("log").innerHTML="";
- ["buyIron","buyCoal","nails","shoes","knives","axes"].forEach(id=>$(id).value=0);
+ game=freshGame();
+ drawContracts();
+ resetInputs();
+ $("report").classList.remove("show");
+ $("log").innerHTML="";
+ save();
+ update();
 }
 
 function drawContracts(){
- const picks=[...contractDeck].sort(()=>Math.random()-.5).slice(0,3);
- game.contracts=picks;
- $("contracts").innerHTML=picks.map((c,i)=>`
+ game.contracts=[...contractDeck].sort(()=>Math.random()-.5).slice(0,3);
+ renderContracts();
+}
+
+function renderContracts(){
+ $("contracts").innerHTML=game.contracts.map((c,i)=>`
  <div class="card">
  <label><input type="checkbox" class="contract" data-i="${i}">
  <span><b>${c.title}</b><br>${c.qty} ${products[c.product].name}<br>Pay: ${c.pay}d · Reputation: +${c.rep}</span></label>
@@ -164,83 +277,258 @@ function drawContracts(){
  document.querySelectorAll(".contract").forEach(x=>x.addEventListener("change",update));
 }
 
-function n(id){return Math.max(0,parseInt($(id).value)||0)}
+function renderInventory(){
+ $("inventoryList").innerHTML=Object.keys(products).map(k=>`
+ <div class="inventory-row"><span>${products[k].name}</span><b>${game.goods[k]}</b></div>
+ `).join("");
+}
+
+function n(id){return Math.max(0,parseInt($(id).value)||0);}
+
+function sellPlan(){
+ return {
+   nails:n("sellNails"),
+   shoes:n("sellShoes"),
+   knives:n("sellKnives"),
+   axes:n("sellAxes")
+ };
+}
+
 function plan(){
  const qty={nails:n("nails"),shoes:n("shoes"),knives:n("knives"),axes:n("axes")};
- const buyIron=n("buyIron"),buyCoal=n("buyCoal");
- let ironNeed=0,coalNeed=0,laborNeed=0;
+ const sells=sellPlan();
+ const buyIron=n("buyIron");
+ const buyCoal=n("buyCoal");
+ let ironNeed=0,coalNeed=0,laborNeed=0,totalItems=0;
+
  Object.keys(qty).forEach(k=>{
    ironNeed+=qty[k]*products[k].iron;
    coalNeed+=qty[k]*products[k].coal;
    laborNeed+=qty[k]*products[k].labor;
+   totalItems+=qty[k];
  });
- const selected=[...document.querySelectorAll(".contract:checked")].map(x=>game.contracts[+x.dataset.i]);
- let income=selected.reduce((s,c)=>s+c.pay,0);
+
+ if(game.upgrades.forge && totalItems>0) coalNeed=Math.max(0,coalNeed-1);
+
+ const selected=[...document.querySelectorAll(".contract:checked")]
+   .map(x=>game.contracts[+x.dataset.i]);
+
+ const contractIncome=selected.reduce((s,c)=>s+c.pay+(game.upgrades.sign?2:0),0);
  const cost=buyIron*game.ironPrice+buyCoal*game.coalPrice;
  const errors=[];
- if(cost>game.cash) errors.push("Not enough cash for purchases.");
- if(ironNeed>game.iron+buyIron) errors.push("Not enough iron.");
- if(coalNeed>game.coal+buyCoal) errors.push("Not enough charcoal.");
- if(laborNeed>game.labor) errors.push("Not enough labor.");
- selected.forEach(c=>{ if(qty[c.product]<c.qty) errors.push(`${c.title} requires ${c.qty} ${products[c.product].name}.`); });
- return {qty,buyIron,buyCoal,ironNeed,coalNeed,laborNeed,selected,income,cost,errors};
+
+ if(cost>game.cash)errors.push("Not enough cash for purchases.");
+ if(ironNeed>game.iron+buyIron)errors.push("Not enough iron.");
+ if(coalNeed>game.coal+buyCoal)errors.push("Not enough charcoal.");
+ if(laborNeed>game.labor)errors.push("Not enough labor.");
+
+ const neededByContracts={nails:0,shoes:0,knives:0,axes:0};
+ selected.forEach(c=>neededByContracts[c.product]+=c.qty);
+
+ Object.keys(products).forEach(k=>{
+   const available=game.goods[k]+qty[k];
+   if(neededByContracts[k]>available){
+     errors.push(`Contracts require ${neededByContracts[k]} ${products[k].name}.`);
+   }
+   const afterContracts=available-neededByContracts[k];
+   if(sells[k]>afterContracts){
+     errors.push(`Not enough ${products[k].name} available for open-market sales.`);
+   }
+ });
+
+ const marketIncome=Object.keys(products)
+   .reduce((sum,k)=>sum+sells[k]*products[k].market,0);
+
+ return {
+   qty,sells,buyIron,buyCoal,ironNeed,coalNeed,laborNeed,
+   selected,contractIncome,marketIncome,cost,errors,neededByContracts
+ };
+}
+
+function updateUpgradeButtons(){
+ const defs=[
+   ["buyBellows","bellows",35],
+   ["buyForge","forge",45],
+   ["buySign","sign",40]
+ ];
+ defs.forEach(([id,key,cost])=>{
+   const b=$(id);
+   b.disabled=game.over||game.upgrades[key]||game.cash<cost;
+   b.textContent=game.upgrades[key]?"Purchased":`Buy for ${cost}d`;
+ });
 }
 
 function update(){
  $("seasonTitle").textContent=`${seasons[game.season]} — Year ${game.year}`;
- $("cash").textContent=game.cash+"d"; $("iron").textContent=game.iron; $("coal").textContent=game.coal;
- $("labor").textContent=game.labor; $("rep").textContent=game.rep;
- $("ironPrice").textContent=game.ironPrice; $("coalPrice").textContent=game.coalPrice;
- $("status").textContent=game.over?"Game Over":"Planning";
+ $("cash").textContent=game.cash+"d";
+ $("iron").textContent=game.iron;
+ $("coal").textContent=game.coal;
+ $("labor").textContent=game.labor;
+ $("rep").textContent=game.rep;
+ $("ironPrice").textContent=game.ironPrice;
+ $("coalPrice").textContent=game.coalPrice;
+ $("status").textContent=game.over?"Campaign Complete":"Planning";
+
  const p=plan();
- $("purchaseCost").textContent="-"+p.cost+"d"; $("ironNeed").textContent=p.ironNeed;
- $("coalNeed").textContent=p.coalNeed; $("laborNeed").textContent=p.laborNeed;
- $("income").textContent="+"+p.income+"d"; $("endingCash").textContent=(game.cash-p.cost+p.income)+"d";
+ $("purchaseCost").textContent="-"+p.cost+"d";
+ $("ironNeed").textContent=p.ironNeed;
+ $("coalNeed").textContent=p.coalNeed;
+ $("laborNeed").textContent=p.laborNeed;
+ $("income").textContent="+"+p.contractIncome+"d";
+ $("marketIncome").textContent="+"+p.marketIncome+"d";
+ $("endingCash").textContent=(game.cash-p.cost+p.contractIncome+p.marketIncome)+"d";
  $("message").className="msg "+(p.errors.length?"bad":"good");
  $("message").textContent=p.errors.length?p.errors.join(" "):"Plan is valid.";
  $("resolve").disabled=game.over||p.errors.length>0;
+ renderInventory();
+ updateUpgradeButtons();
+ save();
 }
 
 function log(label,value){
- const d=document.createElement("div");d.className="logline";
- d.innerHTML=`<span>${label}</span><b>${value}</b>`;$("log").appendChild(d);
+ const d=document.createElement("div");
+ d.className="logline";
+ d.innerHTML=`<span>${label}</span><b>${value}</b>`;
+ $("log").appendChild(d);
+}
+
+function advanceSeason(){
+ if(game.season===3){
+   if(game.year===2){game.over=true;return;}
+   game.year++;
+   game.season=0;
+ }else game.season++;
+
+ game.labor=5+(game.upgrades.bellows?1:0);
+
+ game.ironPrice=Math.max(2,Math.min(5,game.ironPrice+[-1,0,1][Math.floor(Math.random()*3)]));
+ game.coalPrice=Math.max(1,Math.min(4,game.coalPrice+[-1,0,1][Math.floor(Math.random()*3)]));
+ drawContracts();
+}
+
+function finalRank(){
+ const inventoryValue=Object.keys(products).reduce((s,k)=>s+game.goods[k]*products[k].market,0);
+ const upgradeValue=Object.values(game.upgrades).filter(Boolean).length*15;
+ const score=game.cash+(game.rep*10)+inventoryValue+upgradeValue+(game.iron*2)+game.coal;
+ if(score>=220)return "Master Smith";
+ if(score>=165)return "Respected Guild Smith";
+ if(score>=115)return "Established Village Smith";
+ return "Struggling Apprentice";
+}
+
+function buyUpgrade(key,cost,label){
+ if(game.over||game.upgrades[key]||game.cash<cost)return;
+ game.cash-=cost;
+ game.upgrades[key]=true;
+ if(key==="bellows")game.labor+=1;
+ $("report").classList.add("show");
+ $("log").innerHTML="";
+ log(label,"Purchased");
+ log("Cash remaining",game.cash+"d");
+ update();
 }
 
 function resolve(){
- const p=plan(); if(p.errors.length||game.over)return;
+ const p=plan();
+ if(p.errors.length||game.over)return;
+
  $("log").innerHTML="";
  const fate=fateDeck[Math.floor(Math.random()*fateDeck.length)];
  $("fate").innerHTML=`<b>Fate: ${fate.name}</b><br>${fate.text}`;
  log("Starting cash",game.cash+"d");
- game.cash-=p.cost;game.iron+=p.buyIron;game.coal+=p.buyCoal;
+
+ if(fate.labor){game.labor+=fate.labor;log("Fate labor bonus","+"+fate.labor);}
+
+ game.cash-=p.cost;
+ game.iron+=p.buyIron;
+ game.coal+=p.buyCoal;
  if(p.cost)log("Market purchases","-"+p.cost+"d");
- game.iron-=p.ironNeed;game.coal-=p.coalNeed;game.labor-=p.laborNeed;
- if(p.laborNeed)log("Production completed",p.laborNeed+" items");
+
+ game.iron-=p.ironNeed;
+ game.coal-=p.coalNeed;
+ game.labor-=p.laborNeed;
+
+ Object.keys(products).forEach(k=>game.goods[k]+=p.qty[k]);
+ if(p.laborNeed)log("Goods forged",p.laborNeed+" total");
+
  p.selected.forEach(c=>{
-   const pay=Math.max(0,c.pay+(fate.bonus||0));game.cash+=pay;game.rep+=c.rep;
+   game.goods[c.product]-=c.qty;
+   const pay=Math.max(0,c.pay+(fate.bonus||0)+(game.upgrades.sign?2:0));
+   game.cash+=pay;
+   game.rep+=c.rep;
    log(c.title,"+"+pay+"d");
  });
- if(fate.iron){game.iron+=fate.iron;log("Good ore","+1 iron")}
- game.season++;
- if(game.season>=4){game.over=true;game.season=3; $("status").textContent="Game Over";}
- else{
-   game.labor=5;
-   game.ironPrice=Math.max(2,Math.min(5,game.ironPrice+[-1,0,1][Math.floor(Math.random()*3)]));
-   game.coalPrice=Math.max(1,Math.min(4,game.coalPrice+[-1,0,1][Math.floor(Math.random()*3)]));
-   drawContracts();
+
+ Object.keys(products).forEach(k=>{
+   const count=p.sells[k];
+   if(count){
+     game.goods[k]-=count;
+     const unit=Math.max(1,products[k].market+(fate.marketBonus||0));
+     const pay=count*unit;
+     game.cash+=pay;
+     log(`${products[k].name} sold`,`${count} for +${pay}d`);
+   }
+ });
+
+ if(fate.iron){game.iron+=fate.iron;log("Good ore","+1 iron");}
+
+ const completedSeason=`${seasons[game.season]} — Year ${game.year}`;
+ advanceSeason();
+
+ if(game.over){
+   $("fate").innerHTML+=`<br><br><b>Campaign complete: ${finalRank()}</b>`;
+   log("Final cash",game.cash+"d");
+   log("Final reputation",game.rep);
+   log("Final rank",finalRank());
+ }else{
+   log("Season completed",completedSeason);
+   log("Next season labor","+"+game.labor);
+   log("Cash carried forward",game.cash+"d");
+   log("Reputation",game.rep);
  }
- ["buyIron","buyCoal","nails","shoes","knives","axes"].forEach(id=>$(id).value=0);
- document.querySelectorAll(".contract").forEach(x=>x.checked=false);
+
+ resetInputs();
+ renderContracts();
  $("report").classList.add("show");
- log("Ending cash",game.cash+"d");log("Reputation",game.rep);
  update();
  $("report").scrollIntoView({behavior:"smooth"});
 }
 
-["buyIron","buyCoal","nails","shoes","knives","axes"].forEach(id=>$(id).addEventListener("input",update));
+["buyIron","buyCoal","nails","shoes","knives","axes",
+ "sellNails","sellShoes","sellKnives","sellAxes"].forEach(id=>{
+ $(id).addEventListener("input",update);
+});
+
+
+document.querySelectorAll(".step-btn").forEach(button=>{
+ button.addEventListener("click",()=>{
+   const input=$(button.dataset.target);
+   const step=parseInt(button.dataset.step,10)||0;
+   const current=Math.max(0,parseInt(input.value,10)||0);
+   input.value=Math.max(0,current+step);
+   input.dispatchEvent(new Event("input",{bubbles:true}));
+ });
+});
+
 $("resolve").addEventListener("click",resolve);
-$("newGame").addEventListener("click",reset);
-reset();
+$("buyBellows").addEventListener("click",()=>buyUpgrade("bellows",35,"Improved Bellows"));
+$("buyForge").addEventListener("click",()=>buyUpgrade("forge",45,"Efficient Forge"));
+$("buySign").addEventListener("click",()=>buyUpgrade("sign",40,"Guild Sign"));
+
+$("newGame").addEventListener("click",()=>{
+ if(confirm("Erase the current campaign and start over?")){
+   localStorage.removeItem(SAVE_KEY);
+   reset();
+ }
+});
+
+if(load()){
+ if(!Array.isArray(game.contracts)||game.contracts.length===0)drawContracts();
+ renderContracts();
+ resetInputs();
+ update();
+ $("saveNote").textContent="Saved campaign loaded.";
+}else reset();
 })();
 </script>
 </body>
