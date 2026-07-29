@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>The Blacksmith's Ledger v0.4.1</title>
+<title>The Blacksmith's Ledger v0.6</title>
 <style>
 :root{
   --paper:#f3e4bd;--paper2:#e4c991;--ink:#2d2418;--wood:#4c2f1c;
@@ -57,7 +57,36 @@ button:disabled{opacity:.45}
 .stepper button{margin:0;padding:10px 0;font-size:1.35rem;font-weight:bold;line-height:1}
 .stepper input{text-align:center;margin:0;min-width:0}
 .stepper input::-webkit-outer-spin-button,.stepper input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+
 .stepper input[type=number]{-moz-appearance:textfield}
+.upgrade-card.unaffordable{opacity:.62}
+.upgrade-card.owned{border-width:2px}
+.upgrade-status{margin-top:6px;font-size:.85rem;font-weight:bold}
+.owned-badge{display:inline-block;padding:2px 7px;border:1px solid currentColor;border-radius:999px;font-size:.78rem;margin-left:5px}
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.58);display:none;align-items:center;justify-content:center;padding:18px;z-index:9999}
+.modal-backdrop.show{display:flex}
+.modal-box{width:min(420px,100%);background:#f4e2b8;color:#2b1a10;border:3px double #5f3a20;border-radius:12px;padding:18px;box-shadow:0 10px 35px rgba(0,0,0,.45)}
+.modal-box h3{margin-top:0}
+.modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.modal-actions.one{grid-template-columns:1fr}
+
+.modal-actions button{margin:0}
+.end-screen{display:none;text-align:center;padding:22px}
+.end-screen.show{display:block}
+.end-screen h2{font-size:1.8rem;margin-bottom:8px}
+.end-rank{font-size:1.35rem;font-weight:bold;margin:10px 0 16px}
+.end-stats{display:grid;grid-template-columns:1fr auto;gap:8px 14px;text-align:left;max-width:340px;margin:0 auto 18px}
+.end-stats div:nth-child(even){font-weight:bold;text-align:right}
+
+.gameplay-hidden{display:none !important}
+.demand-banner{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:10px;border:1px solid rgba(70,40,20,.35);border-radius:8px;margin-bottom:10px;background:rgba(255,255,255,.22)}
+.demand-name{font-weight:bold}
+.contract-locked{opacity:.55}
+.contract-deadline{font-size:.82rem;margin-top:4px}
+.contract-premium{font-size:.8rem;font-weight:bold}
+
+
+
 .logline{display:flex;justify-content:space-between;border-bottom:1px dotted #9c8055;padding:5px 0}
 @media(min-width:720px){
   main{grid-template-columns:1fr 1fr}
@@ -69,9 +98,28 @@ button:disabled{opacity:.45}
 <div class="wrap"><div class="book">
 <header>
 <h1>The Blacksmith's Ledger</h1>
-<small>Prototype v0.4.1 — touch controls</small>
+<small>Prototype v0.6 — workshop staff</small>
 </header>
 <main>
+
+<section id="endScreen" class="panel end-screen">
+  <h2>Campaign Complete</h2>
+  <div id="endRank" class="end-rank"></div>
+  <p>Your two-year term as village blacksmith has ended.</p>
+  <div class="end-stats">
+    <div>Final cash</div><div id="endCash">0d</div>
+    <div>Reputation</div><div id="endRep">0</div>
+    <div>Iron remaining</div><div id="endIron">0</div>
+    <div>Charcoal remaining</div><div id="endCoal">0</div>
+    <div>Finished goods value</div><div id="endGoods">0d</div>
+    <div>Workshop upgrades</div><div id="endUpgrades">0</div>
+    <div>Final score</div><div id="endScore">0</div>
+  </div>
+  <button id="endNewGame" type="button">Start a New Campaign</button>
+</section>
+<div id="gameplayArea">
+
+
 <section class="panel full">
 <h2 id="seasonTitle">Spring — Year 1</h2>
 <div class="stats">
@@ -90,6 +138,18 @@ button:disabled{opacity:.45}
 <div><label>Buy iron (<span id="ironPrice">3</span>d each)</label><div class="stepper"><button type="button" class="step-btn" data-target="buyIron" data-step="-1" aria-label="Subtract one">−</button><input id="buyIron" type="number" min="0" value="0" inputmode="numeric"><button type="button" class="step-btn" data-target="buyIron" data-step="1" aria-label="Add one">+</button></div></div>
 <div><label>Buy charcoal (<span id="coalPrice">2</span>d each)</label><div class="stepper"><button type="button" class="step-btn" data-target="buyCoal" data-step="-1" aria-label="Subtract one">−</button><input id="buyCoal" type="number" min="0" value="0" inputmode="numeric"><button type="button" class="step-btn" data-target="buyCoal" data-step="1" aria-label="Add one">+</button></div></div>
 </div>
+</section>
+
+
+<section class="panel">
+  <h2>Seasonal Demand</h2>
+  <div class="demand-banner">
+    <div>
+      <div id="demandName" class="demand-name">Steady Trade</div>
+      <div id="demandText" class="small-note">Open-market prices are unchanged.</div>
+    </div>
+    <div id="demandBonus"><b>+0d</b></div>
+  </div>
 </section>
 
 <section class="panel">
@@ -146,23 +206,40 @@ button:disabled{opacity:.45}
 <section class="panel">
   <h2>Workshop Upgrades</h2>
   <div class="upgrade-grid">
-    <div class="upgrade-card">
-      <b>Improved Bellows</b><br>
+    <div class="upgrade-card" id="cardBellows">
+      <b>Improved Bellows</b><span id="badgeBellows"></span><br>
       +1 labor at the start of every season.<br>
       Cost: 35d
-      <button id="buyBellows">Buy Bellows</button>
+      <div class="upgrade-status" id="statusBellows"></div>
+      <button id="buyBellows">Select Bellows</button>
     </div>
-    <div class="upgrade-card">
-      <b>Efficient Forge</b><br>
+    <div class="upgrade-card" id="cardForge">
+      <b>Efficient Forge</b><span id="badgeForge"></span><br>
       The first item produced each season uses 1 less charcoal.<br>
       Cost: 45d
-      <button id="buyForge">Buy Efficient Forge</button>
+      <div class="upgrade-status" id="statusForge"></div>
+      <button id="buyForge">Select Efficient Forge</button>
     </div>
-    <div class="upgrade-card">
-      <b>Guild Sign</b><br>
+    <div class="upgrade-card" id="cardSign">
+      <b>Guild Sign</b><span id="badgeSign"></span><br>
       All completed contracts pay 2d more.<br>
       Cost: 40d
-      <button id="buySign">Buy Guild Sign</button>
+      <div class="upgrade-status" id="statusSign"></div>
+      <button id="buySign">Select Guild Sign</button>
+    </div>
+    <div class="upgrade-card" id="cardApprentice">
+      <b>Apprentice</b><span id="badgeApprentice"></span><br>
+      Adds 1 labor at the start of every season.<br>
+      Cost: 25d
+      <div class="upgrade-status" id="statusApprentice"></div>
+      <button id="buyApprentice">Hire Apprentice</button>
+    </div>
+    <div class="upgrade-card" id="cardJourneyman">
+      <b>Journeyman</b><span id="badgeJourneyman"></span><br>
+      Adds 2 labor at the start of every season.<br>
+      Cost: 60d · Requires reputation 5
+      <div class="upgrade-status" id="statusJourneyman"></div>
+      <button id="buyJourneyman">Hire Journeyman</button>
     </div>
   </div>
 </section>
@@ -175,9 +252,22 @@ button:disabled{opacity:.45}
 </main>
 </div></div>
 
+
+</div>
+<div id="upgradeModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="upgradeModalTitle">
+  <div class="modal-box">
+    <h3 id="upgradeModalTitle">Workshop Upgrade</h3>
+    <p id="upgradeModalText"></p>
+    <div id="upgradeModalActions" class="modal-actions">
+      <button id="cancelUpgrade" type="button">Cancel</button>
+      <button id="confirmUpgrade" type="button">Buy</button>
+    </div>
+  </div>
+</div>
+
 <script>
 (()=>{
-const SAVE_KEY="blacksmithLedger_v04";
+const SAVE_KEY="blacksmithLedger_v05";
 const seasons=["Spring","Summer","Autumn","Winter"];
 
 const products={
@@ -187,30 +277,41 @@ const products={
  axes:{name:"Axe heads",iron:3,coal:2,labor:1,market:12}
 };
 
+const demandDeck=[
+ {name:"Steady Trade",text:"Open-market prices are unchanged.",product:null,bonus:0},
+ {name:"Building Boom",text:"Nails sell for 2d more each.",product:"nails",bonus:2},
+ {name:"Horse Fair",text:"Horseshoes sell for 2d more each.",product:"shoes",bonus:2},
+ {name:"Hunting Season",text:"Knives sell for 3d more each.",product:"knives",bonus:3},
+ {name:"Timber Rush",text:"Axe heads sell for 3d more each.",product:"axes",bonus:3},
+ {name:"Crowded Market",text:"All open-market goods sell for 1d less.",product:"all",bonus:-1}
+];
+
 const contractDeck=[
- {title:"Village Carpenter",product:"nails",qty:2,pay:12,rep:1},
- {title:"Stable Master",product:"shoes",qty:2,pay:18,rep:1},
- {title:"Traveling Merchant",product:"knives",qty:2,pay:24,rep:2},
- {title:"Woodcutter's Guild",product:"axes",qty:1,pay:20,rep:1},
- {title:"Town Repairs",product:"nails",qty:3,pay:17,rep:1},
- {title:"Cavalry Order",product:"shoes",qty:3,pay:29,rep:2},
- {title:"River Barges",product:"nails",qty:4,pay:23,rep:2},
- {title:"Hunter's Lodge",product:"knives",qty:1,pay:14,rep:1},
- {title:"Foresters",product:"axes",qty:2,pay:37,rep:2}
+ {title:"Village Carpenter",product:"nails",qty:2,pay:12,rep:1,minRep:0,deadline:1},
+ {title:"Stable Master",product:"shoes",qty:2,pay:18,rep:1,minRep:0,deadline:1},
+ {title:"Traveling Merchant",product:"knives",qty:2,pay:24,rep:2,minRep:1,deadline:1},
+ {title:"Woodcutter's Guild",product:"axes",qty:1,pay:20,rep:1,minRep:0,deadline:1},
+ {title:"Town Repairs",product:"nails",qty:3,pay:17,rep:1,minRep:0,deadline:1},
+ {title:"Cavalry Order",product:"shoes",qty:3,pay:29,rep:2,minRep:3,deadline:1},
+ {title:"River Barges",product:"nails",qty:4,pay:23,rep:2,minRep:2,deadline:1},
+ {title:"Hunter's Lodge",product:"knives",qty:1,pay:14,rep:1,minRep:0,deadline:1},
+ {title:"Foresters",product:"axes",qty:2,pay:37,rep:2,minRep:3,deadline:1},
+ {title:"Manor Renovation",product:"nails",qty:5,pay:34,rep:3,minRep:5,deadline:1},
+ {title:"Royal Courier",product:"shoes",qty:4,pay:42,rep:3,minRep:6,deadline:1},
+ {title:"Baron's Guard",product:"knives",qty:3,pay:44,rep:3,minRep:7,deadline:1}
 ];
 
 const fateDeck=[
- {name:"Quiet Trade",text:"No change this season.",bonus:0},
+ {name:"Quiet Trade",text:"No additional change this season.",bonus:0},
  {name:"Urgent Demand",text:"Completed contracts pay 2d extra.",bonus:2},
  {name:"Slow Roads",text:"Completed contracts pay 1d less.",bonus:-1},
  {name:"Good Ore",text:"Gain 1 iron after production.",iron:1,bonus:0},
  {name:"Hot Forge",text:"Gain 1 extra labor this season.",labor:1,bonus:0},
- {name:"Merchant Fair",text:"Completed contracts pay 1d extra.",bonus:1},
- {name:"Busy Market",text:"Open-market goods sell for 1d more each.",marketBonus:1,bonus:0},
- {name:"Poor Market",text:"Open-market goods sell for 1d less each.",marketBonus:-1,bonus:0}
+ {name:"Merchant Fair",text:"Completed contracts pay 1d extra.",bonus:1}
 ];
 
 let game;
+let pendingUpgrade=null;
 const $=id=>document.getElementById(id);
 
 function freshGame(){
@@ -218,14 +319,18 @@ function freshGame(){
    season:0,year:1,cash:50,iron:4,coal:4,labor:5,rep:0,
    ironPrice:3,coalPrice:2,over:false,contracts:[],
    goods:{nails:0,shoes:0,knives:0,axes:0},
-   upgrades:{bellows:false,forge:false,sign:false}
+   upgrades:{bellows:false,forge:false,sign:false,apprentice:false,journeyman:false},
+   demand:demandDeck[0]
  };
 }
 
 function normalizeGame(){
  game.goods=game.goods||{nails:0,shoes:0,knives:0,axes:0};
- game.upgrades=game.upgrades||{bellows:false,forge:false,sign:false};
- for(const k of Object.keys(products)) if(typeof game.goods[k]!=="number") game.goods[k]=0;
+ game.upgrades=game.upgrades||{bellows:false,forge:false,sign:false,apprentice:false,journeyman:false};
+ if(typeof game.upgrades.apprentice!=="boolean")game.upgrades.apprentice=false;
+ if(typeof game.upgrades.journeyman!=="boolean")game.upgrades.journeyman=false;
+ game.demand=game.demand||demandDeck[0];
+ for(const k of Object.keys(products)) if(typeof game.goods[k]!=="number")game.goods[k]=0;
 }
 
 function save(){
@@ -242,7 +347,7 @@ function load(){
    const raw=localStorage.getItem(SAVE_KEY);
    if(!raw)return false;
    game=JSON.parse(raw);
-   if(!game || typeof game.cash!=="number")return false;
+   if(!game||typeof game.cash!=="number")return false;
    normalizeGame();
    return true;
  }catch(e){return false;}
@@ -254,8 +359,9 @@ function resetInputs(){
 }
 
 function reset(){
+ hideEndScreen();
  game=freshGame();
- drawContracts();
+ drawSeason();
  resetInputs();
  $("report").classList.remove("show");
  $("log").innerHTML="";
@@ -263,17 +369,32 @@ function reset(){
  update();
 }
 
-function drawContracts(){
- game.contracts=[...contractDeck].sort(()=>Math.random()-.5).slice(0,3);
+function drawSeason(){
+ game.demand=demandDeck[Math.floor(Math.random()*demandDeck.length)];
+ const pool=[...contractDeck].sort(()=>Math.random()-.5);
+ game.contracts=pool.slice(0,4);
  renderContracts();
 }
 
 function renderContracts(){
- $("contracts").innerHTML=game.contracts.map((c,i)=>`
- <div class="card">
- <label><input type="checkbox" class="contract" data-i="${i}">
- <span><b>${c.title}</b><br>${c.qty} ${products[c.product].name}<br>Pay: ${c.pay}d · Reputation: +${c.rep}</span></label>
- </div>`).join("");
+ $("contracts").innerHTML=game.contracts.map((c,i)=>{
+   const locked=game.rep<c.minRep;
+   const premium=c.minRep>=5?'<div class="contract-premium">Premium customer</div>':"";
+   return `
+   <div class="card ${locked?"contract-locked":""}">
+    <label>
+     <input type="checkbox" class="contract" data-i="${i}" ${locked?"disabled":""}>
+     <span>
+      <b>${c.title}</b><br>
+      ${c.qty} ${products[c.product].name}<br>
+      Pay: ${c.pay}d · Reputation: +${c.rep}
+      <div class="contract-deadline">Deadline: end of this season</div>
+      ${locked?`<div class="contract-deadline">Requires reputation ${c.minRep}</div>`:""}
+      ${premium}
+     </span>
+    </label>
+   </div>`;
+ }).join("");
  document.querySelectorAll(".contract").forEach(x=>x.addEventListener("change",update));
 }
 
@@ -283,37 +404,40 @@ function renderInventory(){
  `).join("");
 }
 
+function renderDemand(){
+ $("demandName").textContent=game.demand.name;
+ $("demandText").textContent=game.demand.text;
+ $("demandBonus").innerHTML=`<b>${game.demand.bonus>=0?"+":""}${game.demand.bonus}d</b>`;
+}
+
 function n(id){return Math.max(0,parseInt($(id).value)||0);}
 
-function sellPlan(){
- return {
-   nails:n("sellNails"),
-   shoes:n("sellShoes"),
-   knives:n("sellKnives"),
-   axes:n("sellAxes")
- };
+function marketUnitPrice(k){
+ let price=products[k].market;
+ if(game.demand.product==="all")price+=game.demand.bonus;
+ if(game.demand.product===k)price+=game.demand.bonus;
+ return Math.max(1,price);
 }
 
 function plan(){
  const qty={nails:n("nails"),shoes:n("shoes"),knives:n("knives"),axes:n("axes")};
- const sells=sellPlan();
- const buyIron=n("buyIron");
- const buyCoal=n("buyCoal");
+ const sells={nails:n("sellNails"),shoes:n("sellShoes"),knives:n("sellKnives"),axes:n("sellAxes")};
+ const buyIron=n("buyIron"),buyCoal=n("buyCoal");
  let ironNeed=0,coalNeed=0,laborNeed=0,totalItems=0;
 
  Object.keys(qty).forEach(k=>{
    ironNeed+=qty[k]*products[k].iron;
    coalNeed+=qty[k]*products[k].coal;
-   laborNeed+=qty[k]*products[k].labor;
+   laborNeed+=qty[k];
    totalItems+=qty[k];
  });
-
- if(game.upgrades.forge && totalItems>0) coalNeed=Math.max(0,coalNeed-1);
+ if(game.upgrades.forge&&totalItems>0)coalNeed=Math.max(0,coalNeed-1);
 
  const selected=[...document.querySelectorAll(".contract:checked")]
    .map(x=>game.contracts[+x.dataset.i]);
 
  const contractIncome=selected.reduce((s,c)=>s+c.pay+(game.upgrades.sign?2:0),0);
+ const marketIncome=Object.keys(products).reduce((s,k)=>s+sells[k]*marketUnitPrice(k),0);
  const cost=buyIron*game.ironPrice+buyCoal*game.coalPrice;
  const errors=[];
 
@@ -322,40 +446,93 @@ function plan(){
  if(coalNeed>game.coal+buyCoal)errors.push("Not enough charcoal.");
  if(laborNeed>game.labor)errors.push("Not enough labor.");
 
- const neededByContracts={nails:0,shoes:0,knives:0,axes:0};
- selected.forEach(c=>neededByContracts[c.product]+=c.qty);
+ const required={nails:0,shoes:0,knives:0,axes:0};
+ selected.forEach(c=>required[c.product]+=c.qty);
 
  Object.keys(products).forEach(k=>{
    const available=game.goods[k]+qty[k];
-   if(neededByContracts[k]>available){
-     errors.push(`Contracts require ${neededByContracts[k]} ${products[k].name}.`);
-   }
-   const afterContracts=available-neededByContracts[k];
-   if(sells[k]>afterContracts){
-     errors.push(`Not enough ${products[k].name} available for open-market sales.`);
-   }
+   if(required[k]>available)errors.push(`Contracts require ${required[k]} ${products[k].name}.`);
+   if(sells[k]>available-required[k])errors.push(`Not enough ${products[k].name} for market sales.`);
  });
 
- const marketIncome=Object.keys(products)
-   .reduce((sum,k)=>sum+sells[k]*products[k].market,0);
-
- return {
-   qty,sells,buyIron,buyCoal,ironNeed,coalNeed,laborNeed,
-   selected,contractIncome,marketIncome,cost,errors,neededByContracts
- };
+ return {qty,sells,buyIron,buyCoal,ironNeed,coalNeed,laborNeed,selected,
+         contractIncome,marketIncome,cost,errors,required};
 }
 
 function updateUpgradeButtons(){
  const defs=[
-   ["buyBellows","bellows",35],
-   ["buyForge","forge",45],
-   ["buySign","sign",40]
+  {id:"buyBellows",key:"bellows",cost:35,rep:0,card:"cardBellows",status:"statusBellows",badge:"badgeBellows"},
+  {id:"buyForge",key:"forge",cost:45,rep:0,card:"cardForge",status:"statusForge",badge:"badgeForge"},
+  {id:"buySign",key:"sign",cost:40,rep:0,card:"cardSign",status:"statusSign",badge:"badgeSign"},
+  {id:"buyApprentice",key:"apprentice",cost:25,rep:0,card:"cardApprentice",status:"statusApprentice",badge:"badgeApprentice"},
+  {id:"buyJourneyman",key:"journeyman",cost:60,rep:5,card:"cardJourneyman",status:"statusJourneyman",badge:"badgeJourneyman"}
  ];
- defs.forEach(([id,key,cost])=>{
-   const b=$(id);
-   b.disabled=game.over||game.upgrades[key]||game.cash<cost;
-   b.textContent=game.upgrades[key]?"Purchased":`Buy for ${cost}d`;
+ defs.forEach(d=>{
+   const owned=game.upgrades[d.key],button=$(d.id),card=$(d.card),status=$(d.status),badge=$(d.badge);
+   card.classList.toggle("owned",owned);
+   card.classList.toggle("unaffordable",!owned&&game.cash<d.cost);
+   badge.innerHTML=owned?'<span class="owned-badge">Owned</span>':"";
+   if(owned){
+     button.disabled=true;button.textContent="Purchased";status.textContent="Installed in your workshop.";
+   }else{
+     const repLocked=game.rep<d.rep;
+     button.disabled=game.over;
+     button.textContent=d.key==="apprentice"
+       ?`Hire for ${d.cost}d`
+       :d.key==="journeyman"
+         ?`Hire for ${d.cost}d`
+         :`Select for ${d.cost}d`;
+
+     if(repLocked){
+       card.classList.add("unaffordable");
+       status.textContent=`Requires reputation ${d.rep}. You have ${game.rep}.`;
+     }else{
+       status.textContent=game.cash>=d.cost
+         ?"Available to purchase."
+         :`Need ${d.cost-game.cash}d more.`;
+     }
+   }
  });
+}
+
+function campaignScore(){
+ const inventoryValue=Object.keys(products).reduce((s,k)=>s+game.goods[k]*products[k].market,0);
+ const upgradeCount=Object.values(game.upgrades).filter(Boolean).length;
+ return {
+   inventoryValue,upgradeCount,
+   score:game.cash+game.rep*10+inventoryValue+upgradeCount*15+game.iron*2+game.coal
+ };
+}
+
+function finalRank(){
+ const score=campaignScore().score;
+ if(score>=220)return "Master Smith";
+ if(score>=165)return "Respected Guild Smith";
+ if(score>=115)return "Established Village Smith";
+ return "Struggling Apprentice";
+}
+
+function showEndScreen(){
+ const r=campaignScore();
+ $("endRank").textContent=finalRank();
+ $("endCash").textContent=game.cash+"d";
+ $("endRep").textContent=game.rep;
+ $("endIron").textContent=game.iron;
+ $("endCoal").textContent=game.coal;
+ $("endGoods").textContent=r.inventoryValue+"d";
+ $("endUpgrades").textContent=r.upgradeCount;
+ $("endScore").textContent=r.score;
+ $("endScreen").classList.add("show");
+ $("gameplayArea").classList.add("gameplay-hidden");
+ document.querySelectorAll("input, button").forEach(el=>{if(el.id!=="endNewGame")el.disabled=true;});
+ $("status").textContent="Campaign Complete";
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function hideEndScreen(){
+ $("endScreen").classList.remove("show");
+ $("gameplayArea").classList.remove("gameplay-hidden");
+ document.querySelectorAll("input, button").forEach(el=>el.disabled=false);
 }
 
 function update(){
@@ -380,9 +557,12 @@ function update(){
  $("message").className="msg "+(p.errors.length?"bad":"good");
  $("message").textContent=p.errors.length?p.errors.join(" "):"Plan is valid.";
  $("resolve").disabled=game.over||p.errors.length>0;
+
  renderInventory();
+ renderDemand();
  updateUpgradeButtons();
  save();
+ if(game.over)showEndScreen();
 }
 
 function log(label,value){
@@ -395,35 +575,72 @@ function log(label,value){
 function advanceSeason(){
  if(game.season===3){
    if(game.year===2){game.over=true;return;}
-   game.year++;
-   game.season=0;
+   game.year++;game.season=0;
  }else game.season++;
 
- game.labor=5+(game.upgrades.bellows?1:0);
-
+ game.labor=5
+   +(game.upgrades.bellows?1:0)
+   +(game.upgrades.apprentice?1:0)
+   +(game.upgrades.journeyman?2:0);
  game.ironPrice=Math.max(2,Math.min(5,game.ironPrice+[-1,0,1][Math.floor(Math.random()*3)]));
  game.coalPrice=Math.max(1,Math.min(4,game.coalPrice+[-1,0,1][Math.floor(Math.random()*3)]));
- drawContracts();
+ drawSeason();
 }
 
-function finalRank(){
- const inventoryValue=Object.keys(products).reduce((s,k)=>s+game.goods[k]*products[k].market,0);
- const upgradeValue=Object.values(game.upgrades).filter(Boolean).length*15;
- const score=game.cash+(game.rep*10)+inventoryValue+upgradeValue+(game.iron*2)+game.coal;
- if(score>=220)return "Master Smith";
- if(score>=165)return "Respected Guild Smith";
- if(score>=115)return "Established Village Smith";
- return "Struggling Apprentice";
+const upgradeDefs={
+ bellows:{cost:35,rep:0,label:"Improved Bellows",benefit:"+1 labor each season."},
+ forge:{cost:45,rep:0,label:"Efficient Forge",benefit:"The first produced item uses 1 less charcoal."},
+ sign:{cost:40,rep:0,label:"Guild Sign",benefit:"Completed contracts pay 2d more."},
+ apprentice:{cost:25,rep:0,label:"Apprentice",benefit:"+1 labor at the start of every season."},
+ journeyman:{cost:60,rep:5,label:"Journeyman",benefit:"+2 labor at the start of every season."}
+};
+
+function closeUpgradeModal(){
+ pendingUpgrade=null;
+ $("upgradeModal").classList.remove("show");
 }
 
-function buyUpgrade(key,cost,label){
- if(game.over||game.upgrades[key]||game.cash<cost)return;
- game.cash-=cost;
+function chooseUpgrade(key){
+ if(game.over||game.upgrades[key])return;
+ const def=upgradeDefs[key];
+ pendingUpgrade=key;
+ $("upgradeModalTitle").textContent=def.label;
+
+ if(game.rep<(def.rep||0)){
+   $("upgradeModalText").textContent=
+     `${def.label} requires reputation ${def.rep}. You currently have ${game.rep}.`;
+   $("upgradeModalActions").className="modal-actions one";
+   $("cancelUpgrade").textContent="Continue Playing";
+   $("confirmUpgrade").style.display="none";
+ }else if(game.cash<def.cost){
+   $("upgradeModalText").textContent=`You need ${def.cost}d, but you only have ${game.cash}d. You need ${def.cost-game.cash}d more.`;
+   $("upgradeModalActions").className="modal-actions one";
+   $("cancelUpgrade").textContent="Continue Playing";
+   $("confirmUpgrade").style.display="none";
+ }else{
+   $("upgradeModalText").textContent=`Buy ${def.label} for ${def.cost}d? ${def.benefit}`;
+   $("upgradeModalActions").className="modal-actions";
+   $("cancelUpgrade").textContent="Cancel";
+   $("confirmUpgrade").style.display="";
+   $("confirmUpgrade").textContent=`Buy for ${def.cost}d`;
+ }
+ $("upgradeModal").classList.add("show");
+}
+
+function confirmUpgrade(){
+ if(!pendingUpgrade)return;
+ const key=pendingUpgrade,def=upgradeDefs[key];
+ if(game.rep<(def.rep||0) || game.cash<def.cost){
+   closeUpgradeModal();update();return;
+ }
+ game.cash-=def.cost;
  game.upgrades[key]=true;
- if(key==="bellows")game.labor+=1;
+ if(key==="bellows" || key==="apprentice")game.labor+=1;
+ if(key==="journeyman")game.labor+=2;
+ closeUpgradeModal();
  $("report").classList.add("show");
  $("log").innerHTML="";
- log(label,"Purchased");
+ log(def.label,"Purchased");
  log("Cash remaining",game.cash+"d");
  update();
 }
@@ -447,7 +664,6 @@ function resolve(){
  game.iron-=p.ironNeed;
  game.coal-=p.coalNeed;
  game.labor-=p.laborNeed;
-
  Object.keys(products).forEach(k=>game.goods[k]+=p.qty[k]);
  if(p.laborNeed)log("Goods forged",p.laborNeed+" total");
 
@@ -463,8 +679,7 @@ function resolve(){
    const count=p.sells[k];
    if(count){
      game.goods[k]-=count;
-     const unit=Math.max(1,products[k].market+(fate.marketBonus||0));
-     const pay=count*unit;
+     const pay=count*marketUnitPrice(k);
      game.cash+=pay;
      log(`${products[k].name} sold`,`${count} for +${pay}d`);
    }
@@ -472,16 +687,15 @@ function resolve(){
 
  if(fate.iron){game.iron+=fate.iron;log("Good ore","+1 iron");}
 
- const completedSeason=`${seasons[game.season]} — Year ${game.year}`;
+ const completed=`${seasons[game.season]} — Year ${game.year}`;
  advanceSeason();
 
  if(game.over){
-   $("fate").innerHTML+=`<br><br><b>Campaign complete: ${finalRank()}</b>`;
    log("Final cash",game.cash+"d");
    log("Final reputation",game.rep);
    log("Final rank",finalRank());
  }else{
-   log("Season completed",completedSeason);
+   log("Season completed",completed);
    log("Next season labor","+"+game.labor);
    log("Cash carried forward",game.cash+"d");
    log("Reputation",game.rep);
@@ -491,7 +705,7 @@ function resolve(){
  renderContracts();
  $("report").classList.add("show");
  update();
- $("report").scrollIntoView({behavior:"smooth"});
+ if(!game.over)$("report").scrollIntoView({behavior:"smooth"});
 }
 
 ["buyIron","buyCoal","nails","shoes","knives","axes",
@@ -499,35 +713,43 @@ function resolve(){
  $(id).addEventListener("input",update);
 });
 
-
 document.querySelectorAll(".step-btn").forEach(button=>{
  button.addEventListener("click",()=>{
    const input=$(button.dataset.target);
-   const step=parseInt(button.dataset.step,10)||0;
-   const current=Math.max(0,parseInt(input.value,10)||0);
-   input.value=Math.max(0,current+step);
+   const current=Math.max(0,parseInt(input.value)||0);
+   input.value=Math.max(0,current+(parseInt(button.dataset.step)||0));
    input.dispatchEvent(new Event("input",{bubbles:true}));
  });
 });
 
 $("resolve").addEventListener("click",resolve);
-$("buyBellows").addEventListener("click",()=>buyUpgrade("bellows",35,"Improved Bellows"));
-$("buyForge").addEventListener("click",()=>buyUpgrade("forge",45,"Efficient Forge"));
-$("buySign").addEventListener("click",()=>buyUpgrade("sign",40,"Guild Sign"));
+$("buyBellows").addEventListener("click",()=>chooseUpgrade("bellows"));
+$("buyForge").addEventListener("click",()=>chooseUpgrade("forge"));
+$("buySign").addEventListener("click",()=>chooseUpgrade("sign"));
+$("buyApprentice").addEventListener("click",()=>chooseUpgrade("apprentice"));
+$("buyJourneyman").addEventListener("click",()=>chooseUpgrade("journeyman"));
+$("cancelUpgrade").addEventListener("click",closeUpgradeModal);
+$("confirmUpgrade").addEventListener("click",confirmUpgrade);
+$("upgradeModal").addEventListener("click",e=>{if(e.target===$("upgradeModal"))closeUpgradeModal();});
+
+$("endNewGame").addEventListener("click",()=>{
+ if(confirm("Start a new campaign and erase this completed campaign?")){
+   localStorage.removeItem(SAVE_KEY);reset();
+ }
+});
 
 $("newGame").addEventListener("click",()=>{
  if(confirm("Erase the current campaign and start over?")){
-   localStorage.removeItem(SAVE_KEY);
-   reset();
+   localStorage.removeItem(SAVE_KEY);reset();
  }
 });
 
 if(load()){
- if(!Array.isArray(game.contracts)||game.contracts.length===0)drawContracts();
+ if(!Array.isArray(game.contracts)||game.contracts.length===0)drawSeason();
  renderContracts();
  resetInputs();
  update();
- $("saveNote").textContent="Saved campaign loaded.";
+ $("saveNote").textContent=game.over?"Completed campaign loaded.":"Saved campaign loaded.";
 }else reset();
 })();
 </script>
